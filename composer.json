@@ -1,5 +1,5 @@
 {
-    "name": "sawvant/sdk",
+    "name": "sawvant/sawvant-php",
     "version": "0.1.0",
     "description": "REST API for 2D guillotine sheet cutting optimization. Submit optimization jobs, poll for status, or stream progress via SSE.",
     "keywords": [
