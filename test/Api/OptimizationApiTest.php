@@ -68,6 +68,18 @@ class OptimizationApiTest extends TestCase
     }
 
     /**
+     * Test case for createBatchOptimization
+     *
+     * Submit multiple cutting optimization jobs.
+     *
+     */
+    public function testCreateBatchOptimization()
+    {
+        // TODO: implement
+        self::markTestIncomplete('Not implemented');
+    }
+
+    /**
      * Test case for createOptimization
      *
      * Submit a cutting optimization job.

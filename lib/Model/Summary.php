@@ -472,7 +472,7 @@ class Summary implements ModelInterface, ArrayAccess, \JsonSerializable
     /**
      * Sets unplaced_parts
      *
-     * @param string[]|null $unplaced_parts unplaced_parts
+     * @param string[]|null $unplaced_parts IDs of parts the solver could not fit on any available sheet. A grain direction that forbids the only orientation that would fit is a common cause, alongside sheet quantity limits. The rest of the plan is still valid and cuttable.
      *
      * @return self
      */

@@ -80,6 +80,30 @@ class JobsApiTest extends TestCase
     }
 
     /**
+     * Test case for getJobDiagramPDF
+     *
+     * Render a cutting plan as PDF.
+     *
+     */
+    public function testGetJobDiagramPDF()
+    {
+        // TODO: implement
+        self::markTestIncomplete('Not implemented');
+    }
+
+    /**
+     * Test case for getJobDiagramSVG
+     *
+     * Render a cutting plan as SVG.
+     *
+     */
+    public function testGetJobDiagramSVG()
+    {
+        // TODO: implement
+        self::markTestIncomplete('Not implemented');
+    }
+
+    /**
      * Test case for streamJob
      *
      * Stream job progress via SSE.

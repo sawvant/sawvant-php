@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  * GrainDirectionTest Class Doc Comment
  *
  * @category    Class
- * @description GrainDirection
+ * @description Which axis the grain runs along. On a part it is relative to the part&#39;s own length and width; on a sheet it is relative to the sheet&#39;s. A part may only be placed so that its grain ends up parallel to the sheet&#39;s. A sheet that omits the field is treated as having its grain along its length, so &#x60;length&#x60; and &#x60;width&#x60; on a part constrain rotation even when the sheet says nothing. Use &#x60;none&#x60; on the part for material without a grain, or &#x60;free_same&#x60; to let the solver choose one orientation and apply it to every instance of that part.
  * @package     Sawvant
  * @author      OpenAPI Generator team
  * @link        https://openapi-generator.tech

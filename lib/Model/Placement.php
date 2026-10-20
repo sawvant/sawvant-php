@@ -425,7 +425,7 @@ class Placement implements ModelInterface, ArrayAccess, \JsonSerializable
     /**
      * Sets x
      *
-     * @param float $x mm from top-left of usable area
+     * @param float $x mm from the top-left of the usable area, along the sheet's length axis. x + width never exceeds the usable length.
      *
      * @return self
      */
@@ -452,7 +452,7 @@ class Placement implements ModelInterface, ArrayAccess, \JsonSerializable
     /**
      * Sets y
      *
-     * @param float $y mm from top-left of usable area
+     * @param float $y mm from the top-left of the usable area, along the sheet's width axis. y + height never exceeds the usable width.
      *
      * @return self
      */
@@ -479,7 +479,7 @@ class Placement implements ModelInterface, ArrayAccess, \JsonSerializable
     /**
      * Sets width
      *
-     * @param float $width Post-edge-banding dimension
+     * @param float $width Post-edge-banding dimension along the sheet's length axis
      *
      * @return self
      */
@@ -506,7 +506,7 @@ class Placement implements ModelInterface, ArrayAccess, \JsonSerializable
     /**
      * Sets height
      *
-     * @param float $height Post-edge-banding dimension
+     * @param float $height Post-edge-banding dimension along the sheet's width axis
      *
      * @return self
      */
@@ -533,7 +533,7 @@ class Placement implements ModelInterface, ArrayAccess, \JsonSerializable
     /**
      * Sets rotated
      *
-     * @param bool $rotated rotated
+     * @param bool $rotated True when the part's length runs along the sheet's width axis, so width is the part's width and height is its length.
      *
      * @return self
      */

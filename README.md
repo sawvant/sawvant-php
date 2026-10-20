@@ -64,27 +64,30 @@ if ($result->getStatus() === 'completed') {
 
 ## SSE Streaming
 
-Stream real-time progress events as the job runs:
+Stream real-time progress events as the job runs with `Sawvant\Streaming`:
 
 ```php
 <?php
 
-$jobsApi = new JobsApi($client);
+use Sawvant\Streaming;
 
-foreach ($jobsApi->streamJob($job->getId()) as $event) {
-    match ($event->getType()) {
-        'progress'  => print('Progress: ' . $event->getData() . PHP_EOL),
-        'completed' => (function () use ($event) {
-            echo 'Done: ' . $event->getData() . PHP_EOL;
-        })(),
-        'failed'    => throw new \RuntimeException('Job failed: ' . $event->getData()),
-    };
+$events = Streaming::streamJob($job->getJobId(), getenv('SAWVANT_API_KEY'));
 
-    if (in_array($event->getType(), ['completed', 'failed'])) {
+foreach ($events as $event) {
+    if ($event->type === 'progress') {
+        echo 'Progress: ' . $event->data['progress'] . PHP_EOL;
+    } elseif ($event->type === 'completed') {
+        echo 'Done: ' . print_r($event->data['result'], true) . PHP_EOL;
         break;
+    } elseif ($event->type === 'failed') {
+        throw new \RuntimeException('Job failed: ' . ($event->data['error'] ?? 'unknown error'));
     }
 }
 ```
+
+`streamJob` takes an optional third argument with the base URL (default `https://api.sawvant.com`). `$event->data` is an associative array with the job fields.
+
+When a `completed` event arrives, the SDK fetches the full job via `GET /v1/jobs/{id}` and puts it in the event, so `$event->data['result']` holds the complete result. The server leaves the result out of stream events to keep them small. Other events are passed on as received.
 
 ## Configuration
 
