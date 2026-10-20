@@ -1,22 +1,19 @@
 {
-    "name": "sawvant/sawvant-php",
-    "version": "0.1.0",
-    "description": "REST API for 2D guillotine sheet cutting optimization. Submit optimization jobs, poll for status, or stream progress via SSE.",
+    "name": "sawvant/sdk",
+    "description": "PHP SDK for the Sawvant cutting optimization API",
     "keywords": [
-        "openapitools",
-        "openapi-generator",
-        "openapi",
-        "php",
+        "sawvant",
+        "cutting",
+        "optimization",
         "sdk",
-        "rest",
         "api"
     ],
-    "homepage": "https://openapi-generator.tech",
-    "license": "unlicense",
+    "homepage": "https://sawvant.com",
+    "license": "Apache-2.0",
     "authors": [
         {
-            "name": "OpenAPI",
-            "homepage": "https://openapi-generator.tech"
+            "name": "Sawvant",
+            "homepage": "https://sawvant.com"
         }
     ],
     "require": {
@@ -32,7 +29,8 @@
         "friendsofphp/php-cs-fixer": "^3.5"
     },
     "autoload": {
-        "psr-4": { "Sawvant\\" : "lib/" }
+        "psr-4": { "Sawvant\\" : "lib/" },
+        "files": ["src/Streaming.php"]
     },
     "autoload-dev": {
         "psr-4": { "Sawvant\\Test\\" : "test/" }
