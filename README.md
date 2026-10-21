@@ -18,60 +18,68 @@ composer require sawvant/sdk
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Sawvant\Client\Configuration;
-use Sawvant\Client\ApiClient;
-use Sawvant\Api\OptimizeApi;
+use GuzzleHttp\Client;
 use Sawvant\Api\JobsApi;
+use Sawvant\Api\OptimizationApi;
+use Sawvant\Configuration;
+use Sawvant\Model\CutDirection;
+use Sawvant\Model\GrainDirection;
+use Sawvant\Model\Machine;
 use Sawvant\Model\OptimizeRequest;
-use Sawvant\Model\Sheet;
 use Sawvant\Model\Part;
+use Sawvant\Model\Sheet;
 
-$config = new Configuration();
-$config->setHost('https://api.sawvant.com');
-$config->setApiKey('ApiKeyAuth', 'sk_your_api_key_here');
+$config = Configuration::getDefaultConfiguration()
+    ->setHost('https://api.sawvant.com')
+    ->setApiKey('X-API-Key', 'sk_your_api_key_here');
 
-$client = new ApiClient($config);
-$api = new OptimizeApi($client);
+$http = new Client();
+$optimizationApi = new OptimizationApi($http, $config);
+$jobsApi = new JobsApi($http, $config);
 
-// Submit an optimization job
+// Submit an optimization job. Sizes are in mm.
 $request = new OptimizeRequest([
     'sheets' => [
-        new Sheet(['width' => 2440, 'height' => 1220, 'quantity' => 5]),
+        new Sheet(['id' => 'board', 'length' => 2800, 'width' => 2070, 'quantity' => 10, 'grain' => GrainDirection::NONE]),
     ],
     'parts' => [
-        new Part(['width' => 600, 'height' => 400, 'quantity' => 10, 'label' => 'Panel A']),
-        new Part(['width' => 300, 'height' => 200, 'quantity' => 20, 'label' => 'Panel B']),
+        new Part(['id' => 'panel-a', 'length' => 600, 'width' => 400, 'quantity' => 10, 'grain' => GrainDirection::NONE]),
+        new Part(['id' => 'panel-b', 'length' => 300, 'width' => 200, 'quantity' => 20, 'grain' => GrainDirection::NONE]),
     ],
+    'machine' => new Machine(['blade_thickness' => 4.4, 'max_levels' => 3, 'cut_direction' => CutDirection::_DEFAULT]),
 ]);
 
-$job = $api->createOptimization($request);
-echo 'Job created: ' . $job->getId() . PHP_EOL;
+$job = $optimizationApi->createOptimization($request);
+echo 'Job created: ' . $job->getJobId() . PHP_EOL;
 
 // Poll for results
-$jobsApi = new JobsApi($client);
-
 do {
     sleep(1);
-    $result = $jobsApi->getJob($job->getId());
-} while (in_array($result->getStatus(), ['pending', 'running']));
+    $result = $jobsApi->getJob($job->getJobId());
+} while (in_array($result->getStatus(), ['pending', 'running'], true));
 
 if ($result->getStatus() === 'completed') {
     echo 'Optimization complete: ' . print_r($result->getResult(), true) . PHP_EOL;
 } else {
-    echo 'Job failed: ' . $result->getStatus() . PHP_EOL;
+    echo 'Job failed: ' . $result->getError() . PHP_EOL;
 }
 ```
 
+Error responses (4xx and 5xx) throw `Sawvant\ApiException`; `getResponseBody()` holds the error details.
+
 ## SSE Streaming
 
-Stream real-time progress events as the job runs with `Sawvant\Streaming`:
+Stream real-time progress events as the job runs with `Sawvant\Streaming`. Pass the job ID that `createOptimization` returned:
 
 ```php
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 use Sawvant\Streaming;
 
-$events = Streaming::streamJob($job->getJobId(), getenv('SAWVANT_API_KEY'));
+$jobId = '550e8400-e29b-41d4-a716-446655440000';
+$events = Streaming::streamJob($jobId, (string) getenv('SAWVANT_API_KEY'));
 
 foreach ($events as $event) {
     if ($event->type === 'progress') {
@@ -92,29 +100,43 @@ When a `completed` event arrives, the SDK fetches the full job via `GET /v1/jobs
 ## Configuration
 
 ```php
-$config = new Configuration();
-$config->setHost('https://api.sawvant.com');
-$config->setApiKey('ApiKeyAuth', getenv('SAWVANT_API_KEY'));
-$config->setCurlTimeout(30);
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use GuzzleHttp\Client;
+use Sawvant\Api\JobsApi;
+use Sawvant\Configuration;
+
+$config = Configuration::getDefaultConfiguration()
+    ->setHost('https://api.sawvant.com')
+    ->setApiKey('X-API-Key', (string) getenv('SAWVANT_API_KEY'));
+
+// Timeouts and other HTTP options go on the Guzzle client.
+$jobsApi = new JobsApi(new Client(['timeout' => 30]), $config);
 ```
 
 | Method | Description |
 |--------|-------------|
 | `setHost(string)` | API base URL (default: `https://api.sawvant.com`) |
-| `setApiKey(string, string)` | Set API key for `ApiKeyAuth` scheme |
-| `setCurlTimeout(int)` | Request timeout in seconds |
+| `setApiKey('X-API-Key', string)` | Your `sk_...` API key |
+| `setUserAgent(string)` | User agent sent with each request |
 
 ## API Reference
 
 All endpoints are relative to `https://api.sawvant.com`.
 
-| Method | HTTP | Path | Description |
-|--------|------|------|-------------|
-| `createOptimization` | POST | `/v1/optimize` | Submit a new cutting optimization job |
-| `getJob` | GET | `/v1/jobs/{id}` | Retrieve job status and result |
-| `streamJob` | GET | `/v1/jobs/{id}/stream` | Stream job progress via SSE |
-| `getHealth` | GET | `/health` | Health check (no auth required) |
+| Class | Method | HTTP | Path | Description |
+|-------|--------|------|------|-------------|
+| `OptimizationApi` | `createOptimization` | POST | `/v1/optimize` | Submit a new cutting optimization job |
+| `OptimizationApi` | `createBatchOptimization` | POST | `/v1/optimize/batch` | Submit several optimization jobs at once |
+| `JobsApi` | `getJob` | GET | `/v1/jobs/{id}` | Retrieve job status and result |
+| `JobsApi` | `getJobDiagramSVG` | GET | `/v1/jobs/{id}/diagram` | Cutting diagram as SVG |
+| `JobsApi` | `getJobDiagramPDF` | GET | `/v1/jobs/{id}/diagram.pdf` | Cutting diagram as PDF |
+| `Streaming` | `streamJob` | GET | `/v1/jobs/{id}/stream` | Stream job progress via SSE |
+| `SystemApi` | `getHealth` | GET | `/health` | Health check (no auth required) |
+| `SystemApi` | `listTiers` | GET | `/v1/tiers` | List subscription tiers (no auth required) |
 
 ## License
 
-MIT
+Apache-2.0. See [LICENSE](LICENSE).
